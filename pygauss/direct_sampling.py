@@ -5,7 +5,7 @@ Gaussian distributions.
 
 .. seealso::
     
-    `Documentation on ReadTheDocs <https://https://pygauss-gaussian-sampling.readthedocs.io/en/latest/direct_sampling/index.html>`_
+    `Documentation on ReadTheDocs <https://pygauss-gaussian-sampling.readthedocs.io/en/latest/direct_sampling/index.html>`_
 """
 
 import numpy as np

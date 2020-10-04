@@ -5,7 +5,7 @@ from multivariate Gaussian distributions.
 
 .. seealso::
     
-    `Documentation on ReadTheDocs <https://https://pygauss-gaussian-sampling.readthedocs.io/en/latest/mcmc_sampling/index.html>`_
+    `Documentation on ReadTheDocs <https://pygauss-gaussian-sampling.readthedocs.io/en/latest/mcmc_sampling/index.html>`_
 """
 
 from direct_sampling import sampler_squareRootApprox, sampler_band
