@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API &mdash; PyGauss 0.1.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script type="text/javascript" src="../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Description" href="description.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyGauss
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../direct_sampling/index.html">Direct sampling</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">MCMC sampling</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="description.html">Description</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">API</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyGauss</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">MCMC sampling</a> &raquo;</li>
+        
+      <li>API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/mcmc_sampling/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pygauss.mcmc_sampling">
+<span id="api"></span><span id="mcmc-sampling-api"></span><h1>API<a class="headerlink" href="#module-pygauss.mcmc_sampling" title="Permalink to this headline">¶</a></h1>
+<p>Implementation of Markov chain Monte Carlo (MCMC) approaches to sample
+from multivariate Gaussian distributions.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://dppy.readthedocs.io/en/latest/finite_dpps/exact_sampling.html">Documentation on ReadTheDocs</a></p>
+</div>
+<dl class="class">
+<dt id="pygauss.mcmc_sampling.sampler_MS">
+<em class="property">class </em><code class="sig-prename descclassname">pygauss.mcmc_sampling.</code><code class="sig-name descname">sampler_MS</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">Q</em>, <em class="sig-param">ini</em>, <em class="sig-param">b</em>, <em class="sig-param">band=True</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_MS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_MS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Algorithm dedicated to sample from a multivariate real-valued Gaussian
+distribution <span class="math notranslate nohighlight">\(\mathcal{N}(\boldsymbol{\mu},\mathbf{Q}^{-1})\)</span> where
+<span class="math notranslate nohighlight">\(\mathbf{Q}\)</span> is a symmetric and positive definite precision matrix.
+We assume here that the matrix splitting scheme <span class="math notranslate nohighlight">\(\mathbf{Q} =
+\mathbf{M} - \mathbf{N}\)</span> holds.</p>
+<dl class="method">
+<dt id="pygauss.mcmc_sampling.sampler_MS.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">Q</em>, <em class="sig-param">ini</em>, <em class="sig-param">b</em>, <em class="sig-param">band=True</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_MS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_MS.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mu</strong> (<em>1-D array_like</em><em>, </em><em>of length d</em>) – </p></li>
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Given a size of for instance T, T independent and identically
+distributed (i.i.d.) samples are returned.</p></li>
+<li><p><strong>Q</strong> (<em>2-D array_like</em><em>, </em><em>of shape</em><em> (</em><em>d</em><em>,</em><em>d</em><em>)</em>) – Precision matrix.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygauss.mcmc_sampling.sampler_MS.exact_MS">
+<code class="sig-name descname">exact_MS</code><span class="sig-paren">(</span><em class="sig-param">method='Gauss-Seidel'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_MS.exact_MS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_MS.exact_MS" title="Permalink to this definition">¶</a></dt>
+<dd><p>The samplers considered here are exact.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Matrix splitting approach to choose within
+[‘Gauss-Seidel’,’Richardson’,’Jacobi’,’SOR’].</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>theta</strong> – The drawn samples, of shape (d,size), if that was provided. If not,
+the shape is (d,1).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray, of shape (d,size)</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mcmc_sampling</span> <span class="k">as</span> <span class="nn">mcmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_MS</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">exact_MS</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;Gauss-Seidel&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygauss.mcmc_sampling.sampler_MS.approx_MS">
+<code class="sig-name descname">approx_MS</code><span class="sig-paren">(</span><em class="sig-param">method='Clone-MCMC'</em>, <em class="sig-param">omega=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_MS.approx_MS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_MS.approx_MS" title="Permalink to this definition">¶</a></dt>
+<dd><p>The samplers considered here are approximate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Matrix splitting approach to choose within
+[‘Gauss-Seidel’,’Richardson’,’Jacobi’,’SOR’].</p></li>
+<li><p><strong>omega</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – Tuning parameter appearing in some approximate matrix splitting
+Gibbs samplers.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>theta</strong> – The drawn samples, of shape (d,size), if that was provided. If not,
+the shape is (d,1).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray, of shape (d,size)</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mcmc_sampling</span> <span class="k">as</span> <span class="nn">mcmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_MS</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">approx_MS</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;Gauss-Seidel&quot;</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pygauss.mcmc_sampling.sampler_DA">
+<em class="property">class </em><code class="sig-prename descclassname">pygauss.mcmc_sampling.</code><code class="sig-name descname">sampler_DA</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_DA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_DA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Algorithm dedicated to sample from a multivariate real-valued Gaussian
+distribution <span class="math notranslate nohighlight">\(\mathcal{N}(\boldsymbol{\mu},\mathbf{Q}^{-1})\)</span> where
+<span class="math notranslate nohighlight">\(\mathbf{Q}\)</span> is a symmetric and positive definite precision matrix.
+We assume here that <span class="math notranslate nohighlight">\(\mathbf{Q} =
+\mathbf{G}_1^T\mathbf{\Lambda}_1^{-1}\mathbf{G}_1 +
+\mathbf{G}_2^T\mathbf{\Lambda}_2^{-1}\mathbf{G}_2\)</span>. Sampling from the
+corresponding multivariate Gaussian distribution is done with an MCMC
+algorithm based on a data augmentation scheme.</p>
+<dl class="method">
+<dt id="pygauss.mcmc_sampling.sampler_DA.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_DA.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_DA.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mu</strong> (<em>1-D array_like</em><em>, </em><em>of length d</em>) – </p></li>
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Given a size of for instance T, T independent and identically
+distributed (i.i.d.) samples are returned.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygauss.mcmc_sampling.sampler_DA.exact_DA_circu_diag_band">
+<code class="sig-name descname">exact_DA_circu_diag_band</code><span class="sig-paren">(</span><em class="sig-param">Lamb1</em>, <em class="sig-param">g</em>, <em class="sig-param">M</em>, <em class="sig-param">N</em>, <em class="sig-param">Q2</em>, <em class="sig-param">b2</em>, <em class="sig-param">method='GEDA'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_DA.exact_DA_circu_diag_band"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_DA.exact_DA_circu_diag_band" title="Permalink to this definition">¶</a></dt>
+<dd><p>The samplers considered here are exact. We further assume here
+that <span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span> is a circulant matrix,
+<span class="math notranslate nohighlight">\(\mathbf{\Lambda}_1\)</span> is diagonal, <span class="math notranslate nohighlight">\(\mathbf{G}_2\)</span> is the
+identity matrix and <span class="math notranslate nohighlight">\(\mathbf{Q}_2 = \mathbf{\Lambda}_2^{-1}\)</span> is
+a band matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Lamb1</strong> (<em>1-D array_like</em><em>, </em><em>of length d</em>) – Diagonal elements of <span class="math notranslate nohighlight">\(\mathbf{\Lambda}_1\)</span>.</p></li>
+<li><p><strong>g</strong> (<em>2-D array_like</em><em>, </em><em>of shape</em><em> (</em><em>N</em><em>, </em><em>M</em><em>)</em>) – Vector built by stacking the first columns associated to the
+<span class="math notranslate nohighlight">\(M\)</span> blocks of size <span class="math notranslate nohighlight">\(N\)</span> of the matrix
+<span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span>.</p></li>
+<li><p><strong>M</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Number of different blocks in <span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span>.</p></li>
+<li><p><strong>N</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Dimension of each block in <span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span>.</p></li>
+<li><p><strong>Q2</strong> (<em>2-D array_like</em><em>, </em><em>of shape</em><em> (</em><em>d</em><em>, </em><em>d</em><em>)</em>) – Precision matrix <span class="math notranslate nohighlight">\(\mathbf{Q}_2\)</span>.</p></li>
+<li><p><strong>b2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Bandwidth of <span class="math notranslate nohighlight">\(\mathbf{Q}_2\)</span>.</p></li>
+<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Data augmentation approach to choose within [‘EDA’,’GEDA’].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>theta</strong> – The drawn samples, of shape (d,size), if that was provided. If not,
+the shape is (d,1).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray, of shape (d,size)</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mcmc_sampling</span> <span class="k">as</span> <span class="nn">mcmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lamb1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">d</span><span class="p">),(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">d</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b2</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_DA</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">exact_DA_circu_diag_band</span><span class="p">(</span><span class="n">Lamb1</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">,</span>
+<span class="go">                                       Q2,b2,method=&quot;EDA&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pygauss.mcmc_sampling.sampler_DA.exact_DA_circu_diag_circu">
+<code class="sig-name descname">exact_DA_circu_diag_circu</code><span class="sig-paren">(</span><em class="sig-param">Lamb1</em>, <em class="sig-param">LambG1</em>, <em class="sig-param">LambG2</em>, <em class="sig-param">A</em>, <em class="sig-param">method='GEDA'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_DA.exact_DA_circu_diag_circu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_DA.exact_DA_circu_diag_circu" title="Permalink to this definition">¶</a></dt>
+<dd><p>The samplers considered here are exact. We further assume here
+that <span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span> is a circulant matrix,
+<span class="math notranslate nohighlight">\(\mathbf{\Lambda}_1\)</span> is diagonal, <span class="math notranslate nohighlight">\(\mathbf{\Lambda}_2\)</span> is the identity matrix
+and <span class="math notranslate nohighlight">\(\mathbf{G}_2\)</span> is a circulant matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Lamb1</strong> (<em>1-D array_like</em><em>, </em><em>of length d</em>) – Diagonal elements of <span class="math notranslate nohighlight">\(\mathbf{\Lambda}_1\)</span>.</p></li>
+<li><p><strong>LambG1</strong> (<em>1-D array_like</em><em>, </em><em>of length d</em>) – Diagonal elements of the Fourier counterpart matrix associated to the matrix
+<span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span>.</p></li>
+<li><p><strong>LambG2</strong> (<em>1-D array_like</em><em>, </em><em>of length d</em>) – Diagonal elements of the Fourier counterpart matrix associated to the matrix
+<span class="math notranslate nohighlight">\(\mathbf{G}_2\)</span>.</p></li>
+<li><p><strong>A</strong> (<em>function</em>) – Linear operator returning the matrix-vector product
+<span class="math notranslate nohighlight">\(\mathbf{Qx}\)</span> where <span class="math notranslate nohighlight">\(\mathbf{x} \in \mathbb{R}^d\)</span>.</p></li>
+<li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Data augmentation approach to choose within [‘EDA’,’GEDA’].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>theta</strong> – The drawn samples, of shape (d,size), if that was provided. If not,
+the shape is (d,1).</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray, of shape (d,size)</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mcmc_sampling</span> <span class="k">as</span> <span class="nn">mcmc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Lamb1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">d</span><span class="p">),(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">d</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b2</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_DA</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">exact_DA_circu_diag_band</span><span class="p">(</span><span class="n">Lamb1</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">,</span>
+<span class="go">                                       Q2,b2,method=&quot;EDA&quot;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="description.html" class="btn btn-neutral float-left" title="Description" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Maxime Vono
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

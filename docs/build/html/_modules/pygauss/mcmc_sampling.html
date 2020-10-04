@@ -1,0 +1,793 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pygauss.mcmc_sampling &mdash; PyGauss 0.1.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../../_static/jquery.js"></script>
+        <script type="text/javascript" src="../../_static/underscore.js"></script>
+        <script type="text/javascript" src="../../_static/doctools.js"></script>
+        <script type="text/javascript" src="../../_static/language_data.js"></script>
+        <script type="text/javascript" src="../../_static/copybutton.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> PyGauss
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../direct_sampling/index.html">Direct sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mcmc_sampling/index.html">MCMC sampling</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">PyGauss</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pygauss.mcmc_sampling</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pygauss.mcmc_sampling</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot; Implementation of Markov chain Monte Carlo (MCMC) approaches to sample </span>
+<span class="sd">from multivariate Gaussian distributions.</span>
+
+<span class="sd">.. seealso::</span>
+<span class="sd">    </span>
+<span class="sd">    `Documentation on ReadTheDocs &lt;https://dppy.readthedocs.io/en/latest/finite_dpps/exact_sampling.html&gt;`_</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">direct_sampling</span> <span class="k">import</span> <span class="n">sampler_squareRootApprox</span><span class="p">,</span> <span class="n">sampler_band</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="k">import</span> <span class="n">diagonal_form</span><span class="p">,</span> <span class="n">triangular_inversion</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">solve_triangular</span><span class="p">,</span> <span class="n">solve_banded</span>
+
+<span class="c1">#####################</span>
+<span class="c1"># General instances #</span>
+<span class="c1">#####################    </span>
+        
+<span class="c1"># MCMC sampling based on matrix splitting </span>
+<div class="viewcode-block" id="sampler_MS"><a class="viewcode-back" href="../../mcmc_sampling/api.html#pygauss.mcmc_sampling.sampler_MS">[docs]</a><span class="k">class</span> <span class="nc">sampler_MS</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Algorithm dedicated to sample from a multivariate real-valued Gaussian </span>
+<span class="sd">    distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{Q}^{-1})` where</span>
+<span class="sd">    :math:`\mathbf{Q}` is a symmetric and positive definite precision matrix.</span>
+<span class="sd">    We assume here that the matrix splitting scheme :math:`\mathbf{Q} = </span>
+<span class="sd">    \mathbf{M} - \mathbf{N}` holds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="sampler_MS.__init__"><a class="viewcode-back" href="../../mcmc_sampling/api.html#pygauss.mcmc_sampling.sampler_MS.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">ini</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">band</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mu : 1-D array_like, of length d</span>
+<span class="sd">        size : int, optional</span>
+<span class="sd">            Given a size of for instance T, T independent and identically </span>
+<span class="sd">            distributed (i.i.d.) samples are returned.</span>
+<span class="sd">        Q : 2-D array_like, of shape (d,d)</span>
+<span class="sd">            Precision matrix.</span>
+<span class="sd">            </span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q</span> <span class="o">=</span> <span class="n">Q</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ini</span> <span class="o">=</span> <span class="n">ini</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="o">=</span> <span class="n">band</span></div>
+
+<div class="viewcode-block" id="sampler_MS.exact_MS"><a class="viewcode-back" href="../../mcmc_sampling/api.html#pygauss.mcmc_sampling.sampler_MS.exact_MS">[docs]</a>    <span class="k">def</span> <span class="nf">exact_MS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;Gauss-Seidel&quot;</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The samplers considered here are exact.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        method : string, optional</span>
+<span class="sd">            Matrix splitting approach to choose within </span>
+<span class="sd">            [&#39;Gauss-Seidel&#39;,&#39;Richardson&#39;,&#39;Jacobi&#39;,&#39;SOR&#39;].</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        theta : ndarray, of shape (d,size)</span>
+<span class="sd">            The drawn samples, of shape (d,size), if that was provided. If not, </span>
+<span class="sd">            the shape is (d,1).</span>
+<span class="sd">            </span>
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import mcmc_sampling as mcmc</span>
+<span class="sd">        &gt;&gt;&gt; d = 10</span>
+<span class="sd">        &gt;&gt;&gt; mu = np.zeros(d)</span>
+<span class="sd">        &gt;&gt;&gt; Q = np.eye(d)</span>
+<span class="sd">        &gt;&gt;&gt; S = mcmc.sampler_MS(mu,Q,size=1)</span>
+<span class="sd">        &gt;&gt;&gt; theta = S.exact_MS(method=&quot;Gauss-Seidel&quot;)</span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+        
+        <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">d</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+        <span class="n">theta</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ini</span>
+        
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Gauss-Seidel&quot;</span><span class="p">:</span>
+                
+            <span class="c1"># Matrix splitting Q = M - N</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">N</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">mat</span> <span class="o">=</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                
+            <span class="c1"># Gibbs sampling</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+                <span class="n">Qtheta</span> <span class="o">=</span> <span class="n">N</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">])</span> <span class="o">+</span> <span class="n">z</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">solve_triangular</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">Qtheta</span><span class="p">,</span><span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Richardson&quot;</span><span class="p">:</span>
+                
+            <span class="c1"># Matrix splitting Q = M - N</span>
+            <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)))</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">))))</span> 
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">/</span> <span class="n">omega</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q</span>
+            <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">M</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q</span>
+            <span class="k">def</span> <span class="nf">A</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">M</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q</span>
+                <span class="k">return</span> <span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">lam_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">))),</span><span class="mi">0</span><span class="p">))</span>
+                
+            <span class="c1"># Gibbs sampling</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="p">[</span><span class="n">z</span><span class="p">,</span><span class="n">C</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampler_band</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">cov</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;covariance&quot;</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">z</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">z</span> <span class="o">=</span> <span class="n">sampler_squareRootApprox</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">A</span><span class="p">,</span><span class="n">lam_l</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                             <span class="n">lam_u</span><span class="o">=</span><span class="n">lam_u</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
+                                             <span class="n">K</span><span class="o">=</span><span class="n">d</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;covariance&#39;</span><span class="p">)</span>
+                <span class="n">Qtheta</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">z</span><span class="p">,(</span><span class="n">d</span><span class="p">,))</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Qtheta</span> <span class="o">/</span> <span class="n">M</span>
+                
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Jacobi&quot;</span><span class="p">:</span>
+            
+            <span class="c1"># Check if Q is strictly diagonally dominant</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span> 
+            <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">D</span> 
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">D</span> <span class="o">&lt;=</span> <span class="n">S</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;The precision matrix Q is not strictly diagonally dominant. The Gibbs sampler does not converge.&#39;&#39;&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Matrix splitting Q = M - N</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">M</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q</span>
+            <span class="n">cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">M</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q</span>
+            <span class="k">def</span> <span class="nf">A</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">mat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">M</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q</span>
+                <span class="k">return</span> <span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">lam_u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">))),</span><span class="mi">0</span><span class="p">))</span>
+                
+            <span class="c1"># Gibbs sampling</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="p">[</span><span class="n">z</span><span class="p">,</span><span class="n">C</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampler_band</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">cov</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;covariance&quot;</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="o">==</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">z</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">z</span> <span class="o">=</span> <span class="n">sampler_squareRootApprox</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">A</span><span class="p">,</span><span class="n">lam_l</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                             <span class="n">lam_u</span><span class="o">=</span><span class="n">lam_u</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
+                                             <span class="n">K</span><span class="o">=</span><span class="n">d</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;covariance&#39;</span><span class="p">)</span>
+                <span class="n">Qtheta</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">z</span><span class="p">,(</span><span class="n">d</span><span class="p">,))</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Qtheta</span> <span class="o">/</span> <span class="n">M</span>
+                
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;SOR&quot;</span><span class="p">:</span>
+            
+            <span class="c1"># Check if Q is strictly diagonally dominant</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span> 
+            <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">D</span> 
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">D</span> <span class="o">&lt;=</span> <span class="n">S</span><span class="p">):</span>
+                <span class="n">omega</span> <span class="o">=</span> <span class="mf">1.7</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;The precision matrix Q is not strictly diagonally dominant. A default value has been set for the relaxation parameter omega = </span><span class="si">%f</span><span class="s1">.&#39;&#39;&#39;</span><span class="o">%</span><span class="n">omega</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Dinv</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
+                <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q</span> <span class="o">*</span> <span class="n">Dinv</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]</span>
+                <span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">J</span><span class="p">)))</span>
+                <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">rho</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+                
+            <span class="c1"># Matrix splitting Q = M - N</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> \
+                <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">omega</span><span class="p">)</span><span class="o">/</span><span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">-</span><span class="n">omega</span><span class="p">)</span><span class="o">/</span><span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">N</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">mat</span> <span class="o">=</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> \
+                      <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">omega</span><span class="p">)</span><span class="o">/</span><span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                
+            <span class="c1"># Gibbs sampling</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+                <span class="n">Qtheta</span> <span class="o">=</span> <span class="n">N</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">])</span> <span class="o">+</span> <span class="n">z</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">solve_triangular</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">Qtheta</span><span class="p">,</span><span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;SSOR&quot;</span><span class="p">:</span>
+            
+            <span class="c1"># Check if Q is strictly diagonally dominant</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span> 
+            <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">D</span> 
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">D</span> <span class="o">&lt;=</span> <span class="n">S</span><span class="p">):</span>
+                <span class="n">omega</span> <span class="o">=</span> <span class="mf">1.5</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;The precision matrix Q is not strictly diagonally dominant. A default value has been set for the relaxation parameter omega.&#39;&#39;&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Dinv</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
+                <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q</span> <span class="o">*</span> <span class="n">Dinv</span><span class="p">[:,</span><span class="kc">None</span><span class="p">]</span>
+                <span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvals</span><span class="p">(</span><span class="n">J</span><span class="p">)))</span>
+                <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">rho</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+                
+            <span class="c1"># Matrix splitting Q = M - N</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> \
+                <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">omega</span><span class="p">)</span><span class="o">/</span><span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">-</span><span class="n">omega</span><span class="p">)</span><span class="o">/</span><span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">N</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">mat</span> <span class="o">=</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> \
+                      <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">omega</span><span class="p">)</span><span class="o">/</span><span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">NT</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">mat</span> <span class="o">=</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">))</span> \
+                      <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">omega</span><span class="p">)</span><span class="o">/</span><span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">mat</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                
+            <span class="c1"># Gibbs sampling</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+                <span class="n">Qtheta</span> <span class="o">=</span> <span class="n">N</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">])</span> <span class="o">+</span> <span class="n">z</span>
+                <span class="n">theta_bis</span> <span class="o">=</span> <span class="n">solve_triangular</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="n">Qtheta</span><span class="p">,</span><span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+                <span class="n">Qtheta</span> <span class="o">=</span> <span class="n">NT</span><span class="p">(</span><span class="n">theta_bis</span><span class="p">)</span> <span class="o">+</span> <span class="n">z</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">solve_triangular</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">Qtheta</span><span class="p">,</span><span class="n">lower</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                
+        
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="n">theta</span>  </div>
+    
+            
+<div class="viewcode-block" id="sampler_MS.approx_MS"><a class="viewcode-back" href="../../mcmc_sampling/api.html#pygauss.mcmc_sampling.sampler_MS.approx_MS">[docs]</a>    <span class="k">def</span> <span class="nf">approx_MS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;Clone-MCMC&quot;</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The samplers considered here are approximate.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        method : string, optional</span>
+<span class="sd">            Matrix splitting approach to choose within </span>
+<span class="sd">            [&#39;Gauss-Seidel&#39;,&#39;Richardson&#39;,&#39;Jacobi&#39;,&#39;SOR&#39;].</span>
+<span class="sd">        omega : float, optional</span>
+<span class="sd">            Tuning parameter appearing in some approximate matrix splitting </span>
+<span class="sd">            Gibbs samplers.</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        theta : ndarray, of shape (d,size)</span>
+<span class="sd">            The drawn samples, of shape (d,size), if that was provided. If not, </span>
+<span class="sd">            the shape is (d,1).</span>
+<span class="sd">            </span>
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import mcmc_sampling as mcmc</span>
+<span class="sd">        &gt;&gt;&gt; d = 10</span>
+<span class="sd">        &gt;&gt;&gt; mu = np.zeros(d)</span>
+<span class="sd">        &gt;&gt;&gt; Q = np.eye(d)</span>
+<span class="sd">        &gt;&gt;&gt; S = mcmc.sampler_MS(mu,Q,size=1)</span>
+<span class="sd">        &gt;&gt;&gt; theta = S.approx_MS(method=&quot;Gauss-Seidel&quot;,omega=1)</span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+        
+        <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">d</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Clone-MCMC&quot;</span><span class="p">:</span>
+            
+            <span class="c1"># Check if Q is strictly diagonally dominant</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span> 
+            <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">D</span> 
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">D</span> <span class="o">&lt;=</span> <span class="n">S</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;The precision matrix Q is not strictly diagonally dominant. The Gibbs sampler does not converge.&#39;&#39;&#39;</span><span class="p">)</span>
+
+                
+            <span class="c1"># Matrix splitting Q = M - N</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">omega</span>
+            <span class="n">Mbis</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">M</span>
+            <span class="k">def</span> <span class="nf">N</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">mat</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> \
+                      <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> \
+                      <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                
+            <span class="c1"># Gibbs sampling</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">Mbis</span><span class="p">)</span>
+                <span class="n">Qtheta</span> <span class="o">=</span> <span class="n">N</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">])</span> <span class="o">+</span> <span class="n">z</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Qtheta</span> <span class="o">/</span> <span class="n">M</span>
+                
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;Hogwild&quot;</span><span class="p">:</span>
+            
+            <span class="c1"># Check if Q is strictly diagonally dominant</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span> 
+            <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">D</span> 
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">D</span> <span class="o">&lt;=</span> <span class="n">S</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;The precision matrix Q is not strictly diagonally dominant. The Gibbs sampler does not converge.&#39;&#39;&#39;</span><span class="p">)</span>
+
+                
+            <span class="c1"># Matrix splitting Q = M - N</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">N</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">mat</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">)</span> \
+                      <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Q</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">mat</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                
+            <span class="c1"># Gibbs sampling</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+                <span class="n">Qtheta</span> <span class="o">=</span> <span class="n">N</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">])</span> <span class="o">+</span> <span class="n">z</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Qtheta</span> <span class="o">/</span> <span class="n">M</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="n">theta</span>  </div></div>
+        
+        
+<span class="c1"># MCMC sampling based on data augmentation</span>
+<div class="viewcode-block" id="sampler_DA"><a class="viewcode-back" href="../../mcmc_sampling/api.html#pygauss.mcmc_sampling.sampler_DA">[docs]</a><span class="k">class</span> <span class="nc">sampler_DA</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Algorithm dedicated to sample from a multivariate real-valued Gaussian </span>
+<span class="sd">    distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{Q}^{-1})` where</span>
+<span class="sd">    :math:`\mathbf{Q}` is a symmetric and positive definite precision matrix.</span>
+<span class="sd">    We assume here that :math:`\mathbf{Q} = </span>
+<span class="sd">    \mathbf{G}_1^T\mathbf{\Lambda}_1^{-1}\mathbf{G}_1 + </span>
+<span class="sd">    \mathbf{G}_2^T\mathbf{\Lambda}_2^{-1}\mathbf{G}_2`. Sampling from the</span>
+<span class="sd">    corresponding multivariate Gaussian distribution is done with an MCMC</span>
+<span class="sd">    algorithm based on a data augmentation scheme.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="sampler_DA.__init__"><a class="viewcode-back" href="../../mcmc_sampling/api.html#pygauss.mcmc_sampling.sampler_DA.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mu : 1-D array_like, of length d</span>
+<span class="sd">        size : int, optional</span>
+<span class="sd">            Given a size of for instance T, T independent and identically </span>
+<span class="sd">            distributed (i.i.d.) samples are returned.       </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span></div>
+    
+<div class="viewcode-block" id="sampler_DA.exact_DA_circu_diag_band"><a class="viewcode-back" href="../../mcmc_sampling/api.html#pygauss.mcmc_sampling.sampler_DA.exact_DA_circu_diag_band">[docs]</a>    <span class="k">def</span> <span class="nf">exact_DA_circu_diag_band</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Lamb1</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">Q2</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;GEDA&quot;</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The samplers considered here are exact. We further assume here </span>
+<span class="sd">        that :math:`\mathbf{G}_1` is a circulant matrix, </span>
+<span class="sd">        :math:`\mathbf{\Lambda}_1` is diagonal, :math:`\mathbf{G}_2` is the</span>
+<span class="sd">        identity matrix and :math:`\mathbf{Q}_2 = \mathbf{\Lambda}_2^{-1}` is </span>
+<span class="sd">        a band matrix.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Lamb1 : 1-D array_like, of length d</span>
+<span class="sd">            Diagonal elements of :math:`\mathbf{\Lambda}_1`.</span>
+<span class="sd">        g : 2-D array_like, of shape (N, M)</span>
+<span class="sd">            Vector built by stacking the first columns associated to the </span>
+<span class="sd">            :math:`M` blocks of size :math:`N` of the matrix </span>
+<span class="sd">            :math:`\mathbf{G}_1`.</span>
+<span class="sd">        M : int</span>
+<span class="sd">            Number of different blocks in :math:`\mathbf{G}_1`.</span>
+<span class="sd">        N : int</span>
+<span class="sd">            Dimension of each block in :math:`\mathbf{G}_1`.</span>
+<span class="sd">        Q2 : 2-D array_like, of shape (d, d)</span>
+<span class="sd">            Precision matrix :math:`\mathbf{Q}_2`.</span>
+<span class="sd">        b2 : int</span>
+<span class="sd">            Bandwidth of :math:`\mathbf{Q}_2`.</span>
+<span class="sd">        method : string, optional</span>
+<span class="sd">            Data augmentation approach to choose within [&#39;EDA&#39;,&#39;GEDA&#39;].</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        theta : ndarray, of shape (d,size)</span>
+<span class="sd">            The drawn samples, of shape (d,size), if that was provided. If not, </span>
+<span class="sd">            the shape is (d,1).</span>
+<span class="sd">            </span>
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import mcmc_sampling as mcmc</span>
+<span class="sd">        &gt;&gt;&gt; d = 15</span>
+<span class="sd">        &gt;&gt;&gt; Lamb1 = np.random.normal(2,0.1,d)</span>
+<span class="sd">        &gt;&gt;&gt; g =  np.reshape(np.random.normal(2,0.1,d),(d,1))</span>
+<span class="sd">        &gt;&gt;&gt; M = 1</span>
+<span class="sd">        &gt;&gt;&gt; N = d</span>
+<span class="sd">        &gt;&gt;&gt; Q2 = np.diag(np.random.normal(2,0.1,d))</span>
+<span class="sd">        &gt;&gt;&gt; b2 = 0</span>
+<span class="sd">        &gt;&gt;&gt; S = mcmc.sampler_DA(mu,size=1)</span>
+<span class="sd">        &gt;&gt;&gt; theta = S.exact_DA_circu_diag_band(Lamb1,g,M,N,</span>
+<span class="sd">                                               Q2,b2,method=&quot;EDA&quot;)</span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+        
+        <span class="c1"># Pre-computing</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">LambG1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">LambG1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">LambG1</span><span class="p">,(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LambG1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft2</span><span class="p">(</span><span class="n">g</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">LambG1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">LambG1</span><span class="p">,(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        
+        <span class="k">def</span> <span class="nf">Q1</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> \
+                   <span class="o">*</span> <span class="n">LambG1</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Lamb1</span><span class="p">,(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> \
+                   <span class="o">*</span> <span class="n">LambG1</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        
+        <span class="n">omega</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">LambG1</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">Lamb1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+            
+        <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">d</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;EDA&quot;</span><span class="p">:</span>
+            
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            
+                <span class="c1"># Sample the auxiliary variable u1</span>
+                <span class="n">mu_u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">],(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">omega</span> \
+                                   <span class="o">-</span> <span class="n">Q1</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">],(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))),(</span><span class="n">d</span><span class="p">,))</span>
+                <span class="k">def</span> <span class="nf">A</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">x</span> <span class="o">/</span> <span class="n">omega</span> <span class="o">-</span> <span class="n">Q1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">lam_u</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">omega</span>
+                <span class="n">u1</span> <span class="o">=</span> <span class="n">sampler_squareRootApprox</span><span class="p">(</span><span class="n">mu_u1</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">lam_l</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                             <span class="n">lam_u</span><span class="o">=</span><span class="n">lam_u</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
+                                             <span class="n">K</span><span class="o">=</span><span class="n">d</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;covariance&#39;</span><span class="p">)</span>
+                <span class="n">u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">u1</span><span class="p">,(</span><span class="n">d</span><span class="p">,))</span>
+                
+                <span class="c1"># Sample the variable of interest theta</span>
+                <span class="n">Q_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">/</span> <span class="n">omega</span> <span class="o">+</span> <span class="n">Q2</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">sampler_band</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">Q_theta</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span>
+                                        <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">C</span> <span class="o">=</span> <span class="n">sampler_band</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">Q2</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span>
+                                        <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">def</span> <span class="nf">Q2_fun</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                    <span class="n">CTx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">)</span>
+                    <span class="n">Q2x</span> <span class="o">=</span> <span class="n">CTx</span> 
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">):</span>
+                        <span class="n">m1</span> <span class="o">=</span> <span class="n">i</span>
+                        <span class="n">m2</span> <span class="o">=</span> <span class="n">b2</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="n">CTx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">):</span>
+                        <span class="n">m1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="o">-</span><span class="n">b2</span><span class="p">)</span>
+                        <span class="n">m2</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="n">Q2x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">],</span><span class="n">CTx</span><span class="p">[</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">])</span>
+                    <span class="k">return</span> <span class="n">Q2x</span>
+                <span class="n">mu_theta</span> <span class="o">=</span> <span class="n">u1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Q1</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))),(</span><span class="n">d</span><span class="p">,))</span> <span class="o">+</span> <span class="n">Q2_fun</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+                <span class="n">ab</span> <span class="o">=</span> <span class="n">diagonal_form</span><span class="p">(</span><span class="n">Q_theta</span><span class="p">,</span><span class="n">lower</span><span class="o">=</span><span class="n">b2</span><span class="p">,</span><span class="n">upper</span><span class="o">=</span><span class="n">b2</span><span class="p">)</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">solve_banded</span><span class="p">((</span><span class="n">b2</span><span class="p">,</span> <span class="n">b2</span><span class="p">),</span> <span class="n">ab</span><span class="p">,</span> <span class="n">mu_theta</span><span class="p">)</span> \
+                               <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">z</span><span class="p">,(</span><span class="n">d</span><span class="p">,))</span>
+                               
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GEDA&quot;</span><span class="p">:</span>
+            
+            <span class="n">u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            
+                <span class="c1"># Sample the auxiliary variable u2</span>
+                <span class="n">mu_u2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">u1</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> \
+                                    <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">LambG1</span><span class="p">,(</span><span class="n">d</span><span class="p">,)),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="n">u2</span> <span class="o">=</span> <span class="n">mu_u2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">Lamb1</span><span class="p">)</span>
+                
+                <span class="c1"># Sample the auxiliary variable u1</span>
+                <span class="n">mu_u1</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">omega</span> <span class="o">*</span> \
+                        <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Q1</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">],(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))),(</span><span class="n">d</span><span class="p">,))</span> \
+                        <span class="o">+</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">LambG1</span><span class="o">.</span><span class="n">conj</span><span class="p">(),(</span><span class="n">d</span><span class="p">,))</span> \
+                        <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">Lamb1</span> <span class="o">*</span> <span class="n">u2</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="n">u1</span> <span class="o">=</span> <span class="n">mu_u1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
+                
+                <span class="c1"># Sample the variable of interest theta</span>
+                <span class="n">Q_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">/</span> <span class="n">omega</span> <span class="o">+</span> <span class="n">Q2</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">sampler_band</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">Q_theta</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span>
+                                        <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">C</span> <span class="o">=</span> <span class="n">sampler_band</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">Q2</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span>
+                                        <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">def</span> <span class="nf">Q2_fun</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                    <span class="n">CTx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">)</span>
+                    <span class="n">Q2x</span> <span class="o">=</span> <span class="n">CTx</span> 
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">):</span>
+                        <span class="n">m1</span> <span class="o">=</span> <span class="n">i</span>
+                        <span class="n">m2</span> <span class="o">=</span> <span class="n">b2</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="n">CTx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">):</span>
+                        <span class="n">m1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="o">-</span><span class="n">b2</span><span class="p">)</span>
+                        <span class="n">m2</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="n">Q2x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">],</span><span class="n">CTx</span><span class="p">[</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">])</span>
+                    <span class="k">return</span> <span class="n">Q2x</span>
+                <span class="n">mu_theta</span> <span class="o">=</span> <span class="n">u1</span> <span class="o">/</span> <span class="n">omega</span> \
+                           <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Q1</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">u1</span><span class="p">,(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))),(</span><span class="n">d</span><span class="p">,))</span> \
+                           <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Q1</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))),(</span><span class="n">d</span><span class="p">,))</span> \
+                           <span class="o">+</span> <span class="n">Q2_fun</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+                <span class="n">ab</span> <span class="o">=</span> <span class="n">diagonal_form</span><span class="p">(</span><span class="n">Q_theta</span><span class="p">,</span><span class="n">lower</span><span class="o">=</span><span class="n">b2</span><span class="p">,</span><span class="n">upper</span><span class="o">=</span><span class="n">b2</span><span class="p">)</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">solve_banded</span><span class="p">((</span><span class="n">b2</span><span class="p">,</span> <span class="n">b2</span><span class="p">),</span> <span class="n">ab</span><span class="p">,</span> <span class="n">mu_theta</span><span class="p">)</span> \
+                               <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">z</span><span class="p">,(</span><span class="n">d</span><span class="p">,))</span>
+                
+        <span class="k">return</span> <span class="n">theta</span>  </div>
+
+<div class="viewcode-block" id="sampler_DA.exact_DA_circu_diag_circu"><a class="viewcode-back" href="../../mcmc_sampling/api.html#pygauss.mcmc_sampling.sampler_DA.exact_DA_circu_diag_circu">[docs]</a>    <span class="k">def</span> <span class="nf">exact_DA_circu_diag_circu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Lamb1</span><span class="p">,</span><span class="n">LambG1</span><span class="p">,</span><span class="n">LambG2</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;GEDA&quot;</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The samplers considered here are exact. We further assume here </span>
+<span class="sd">        that :math:`\mathbf{G}_1` is a circulant matrix, </span>
+<span class="sd">        :math:`\mathbf{\Lambda}_1` is diagonal, :math:`\mathbf{\Lambda}_2` is the identity matrix</span>
+<span class="sd">        and :math:`\mathbf{G}_2` is a circulant matrix.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Lamb1 : 1-D array_like, of length d</span>
+<span class="sd">            Diagonal elements of :math:`\mathbf{\Lambda}_1`.</span>
+<span class="sd">        LambG1 : 1-D array_like, of length d</span>
+<span class="sd">            Diagonal elements of the Fourier counterpart matrix associated to the matrix </span>
+<span class="sd">            :math:`\mathbf{G}_1`.</span>
+<span class="sd">        LambG2 : 1-D array_like, of length d</span>
+<span class="sd">            Diagonal elements of the Fourier counterpart matrix associated to the matrix </span>
+<span class="sd">            :math:`\mathbf{G}_2`.</span>
+<span class="sd">        A : function</span>
+<span class="sd">            Linear operator returning the matrix-vector product </span>
+<span class="sd">            :math:`\mathbf{Qx}` where :math:`\mathbf{x} \in \mathbb{R}^d`.</span>
+<span class="sd">        method : string, optional</span>
+<span class="sd">            Data augmentation approach to choose within [&#39;EDA&#39;,&#39;GEDA&#39;].</span>
+<span class="sd">            </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        theta : ndarray, of shape (d,size)</span>
+<span class="sd">            The drawn samples, of shape (d,size), if that was provided. If not, </span>
+<span class="sd">            the shape is (d,1).</span>
+<span class="sd">            </span>
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import mcmc_sampling as mcmc</span>
+<span class="sd">        &gt;&gt;&gt; d = 15</span>
+<span class="sd">        &gt;&gt;&gt; Lamb1 = np.random.normal(2,0.1,d)</span>
+<span class="sd">        &gt;&gt;&gt; g =  np.reshape(np.random.normal(2,0.1,d),(d,1))</span>
+<span class="sd">        &gt;&gt;&gt; M = 1</span>
+<span class="sd">        &gt;&gt;&gt; N = d</span>
+<span class="sd">        &gt;&gt;&gt; Q2 = np.diag(np.random.normal(2,0.1,d))</span>
+<span class="sd">        &gt;&gt;&gt; b2 = 0</span>
+<span class="sd">        &gt;&gt;&gt; S = mcmc.sampler_DA(mu,size=1)</span>
+<span class="sd">        &gt;&gt;&gt; theta = S.exact_DA_circu_diag_band(Lamb1,g,M,N,</span>
+<span class="sd">                                               Q2,b2,method=&quot;EDA&quot;)</span>
+<span class="sd">        &quot;&quot;&quot;</span> 
+
+        <span class="k">def</span> <span class="nf">Q1</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">Fx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">Fx</span> <span class="o">*</span> <span class="n">LambG1</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span> \
+                       <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">Lamb1</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">LambG1</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+        
+        <span class="n">omega</span> <span class="o">=</span> <span class="mf">0.9</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">Lamb1</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">LambG1</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span>
+
+        <span class="n">Lamb</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">omega</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">LambG2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+            
+        <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">d</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;EDA&quot;</span><span class="p">:</span>
+            
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            
+                <span class="c1"># Sample the auxiliary variable u1</span>
+                <span class="n">mu_u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">],(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">/</span> <span class="n">omega</span> \
+                                   <span class="o">-</span> <span class="n">Q1</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">],(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))),(</span><span class="n">d</span><span class="p">,))</span>
+                <span class="k">def</span> <span class="nf">A</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">x</span> <span class="o">/</span> <span class="n">omega</span> <span class="o">-</span> <span class="n">Q1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">lam_u</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">omega</span>
+                <span class="n">u1</span> <span class="o">=</span> <span class="n">sampler_squareRootApprox</span><span class="p">(</span><span class="n">mu_u1</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">lam_l</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                             <span class="n">lam_u</span><span class="o">=</span><span class="n">lam_u</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
+                                             <span class="n">K</span><span class="o">=</span><span class="n">d</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;covariance&#39;</span><span class="p">)</span>
+                <span class="n">u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">u1</span><span class="p">,(</span><span class="n">d</span><span class="p">,))</span>
+                
+                <span class="c1"># Sample the variable of interest theta</span>
+                <span class="n">Q_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">/</span> <span class="n">omega</span> <span class="o">+</span> <span class="n">Q2</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">sampler_band</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">Q_theta</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span>
+                                        <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">C</span> <span class="o">=</span> <span class="n">sampler_band</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">),</span><span class="n">Q2</span><span class="p">,</span><span class="n">b2</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span>
+                                        <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">def</span> <span class="nf">Q2_fun</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                    <span class="n">CTx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">)</span>
+                    <span class="n">Q2x</span> <span class="o">=</span> <span class="n">CTx</span> 
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">):</span>
+                        <span class="n">m1</span> <span class="o">=</span> <span class="n">i</span>
+                        <span class="n">m2</span> <span class="o">=</span> <span class="n">b2</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="n">CTx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">],</span><span class="n">x</span><span class="p">[</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">):</span>
+                        <span class="n">m1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="o">-</span><span class="n">b2</span><span class="p">)</span>
+                        <span class="n">m2</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                        <span class="n">Q2x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">],</span><span class="n">CTx</span><span class="p">[</span><span class="n">m1</span><span class="p">:</span><span class="n">m2</span><span class="p">])</span>
+                    <span class="k">return</span> <span class="n">Q2x</span>
+                <span class="n">mu_theta</span> <span class="o">=</span> <span class="n">u1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Q1</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))),(</span><span class="n">d</span><span class="p">,))</span> <span class="o">+</span> <span class="n">Q2_fun</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+                <span class="n">ab</span> <span class="o">=</span> <span class="n">diagonal_form</span><span class="p">(</span><span class="n">Q_theta</span><span class="p">,</span><span class="n">lower</span><span class="o">=</span><span class="n">b2</span><span class="p">,</span><span class="n">upper</span><span class="o">=</span><span class="n">b2</span><span class="p">)</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">solve_banded</span><span class="p">((</span><span class="n">b2</span><span class="p">,</span> <span class="n">b2</span><span class="p">),</span> <span class="n">ab</span><span class="p">,</span> <span class="n">mu_theta</span><span class="p">)</span> \
+                               <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">z</span><span class="p">,(</span><span class="n">d</span><span class="p">,))</span>
+                               
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GEDA&quot;</span><span class="p">:</span>
+            
+            <span class="n">u1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            
+                <span class="c1"># Sample the auxiliary variable u2</span>
+                <span class="n">mu_u2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">u1</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> \
+                                    <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">LambG1</span><span class="p">,(</span><span class="n">d</span><span class="p">,)),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="n">u2</span> <span class="o">=</span> <span class="n">mu_u2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">Lamb1</span><span class="p">)</span>
+                
+                <span class="c1"># Sample the auxiliary variable u1</span>
+                <span class="n">mu_u1</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">Q1</span><span class="p">(</span><span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="p">])</span> \
+                        <span class="o">+</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">LambG1</span><span class="o">.</span><span class="n">conj</span><span class="p">(),(</span><span class="n">d</span><span class="p">,))</span> \
+                        <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">Lamb1</span> <span class="o">*</span> <span class="n">u2</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="n">u1</span> <span class="o">=</span> <span class="n">mu_u1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
+                
+                <span class="c1"># Sample the variable of interest theta</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+                <span class="n">mu_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">u1</span><span class="o">/</span><span class="n">omega</span> <span class="o">-</span> <span class="n">Q1</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">A</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))),(</span><span class="n">d</span><span class="p">,)),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">Lamb</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+                <span class="n">theta</span><span class="p">[:,</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">mu_theta</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="n">Lamb</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">real</span>
+            
+        <span class="k">return</span> <span class="n">theta</span>  </div></div>
+    
+    
+      
+        
+        
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Maxime Vono
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

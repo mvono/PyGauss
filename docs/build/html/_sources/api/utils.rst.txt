@@ -1,0 +1,8 @@
+
+utils module
+######################
+
+.. automodule:: pygauss.utils
+	:members:
+
+

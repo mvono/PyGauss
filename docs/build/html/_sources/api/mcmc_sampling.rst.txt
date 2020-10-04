@@ -1,0 +1,8 @@
+
+mcmc_sampling module
+######################
+
+.. automodule:: pygauss.mcmc_sampling
+	:members:
+
+

@@ -1,0 +1,8 @@
+
+direct_sampling module
+######################
+
+.. automodule:: pygauss.direct_sampling
+	:members:
+
+
