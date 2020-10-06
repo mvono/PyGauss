@@ -7,7 +7,7 @@ Introduction
 Efficient sampling from a high-dimensional Gaussian distribution is an old but high-stake issue. 
 In past years, multiple methods have been proposed from different communities to tackle this difficult sampling task ranging from iterative numerical linear algebra to Markov chain Monte Carlo (MCMC) approaches. 
 PyGauss is a `Python <https://www.python.org/>`__ library that puts together all exact and approximate sampling algorithms for high-dimensional Gaussian sampling.
-It stands for the companion package of the review paper entitled *High-dimensional Gaussian sampling: A review and a unifying approach based on a stochastic proximal point algorithm* and publicy available on arXiv at .
+It stands for the companion package of the review paper entitled *High-dimensional Gaussian sampling: A review and a unifying approach based on a stochastic proximal point algorithm* and publicy available on `arXiv <https://arxiv.org/abs/2010.01510>`_.
 
 Installation
 ------------

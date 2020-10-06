@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 .. _PyGauss: https://github.com/mvono/PyGauss
-.. _arXiv: https://arxiv.org/abs/
+.. _arXiv: https://arxiv.org/abs/2010.01510
 
 Welcome to PyGauss_'s documentation!
 ====================================
