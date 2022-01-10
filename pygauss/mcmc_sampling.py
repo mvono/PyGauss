@@ -27,26 +27,35 @@ class sampler_MS:
     \mathbf{M} - \mathbf{N}` holds.
     """
 
-    def __init__(self,mu,Q,ini,b,band=True,size=1):
+    def __init__(self,mu,Q,ini,b,band=True,seed=2022,size=1):
         r"""
     
         Parameters
         ----------
         mu : 1-D array_like, of length d
-        size : int, optional
-            Given a size of for instance T, T independent and identically 
-            distributed (i.i.d.) samples are returned.
         Q : 2-D array_like, of shape (d,d)
             Precision matrix.
+        ini : 1-D array_like, of length d. Initialization of the Markov chain.
+        b : int
+            Bandwidth of the precision matrix Q.
+        band : boolean, optional
+               Indicates if the precision matrix is banded with bandwidth b.
+        seed : int, optional
+               Random seed to reproduce experimental results.
+        size : int, optional
+               Given a size of for instance T, T independent and identically 
+               distributed (i.i.d.) samples are returned.
+
             
             """
             
         self.mu = mu
-        self.size = size
         self.Q = Q
         self.ini = ini
         self.b = b
         self.band = band
+        self.seed = seed
+        self.size = size
 
     def exact_MS(self,method="Gauss-Seidel"):
         r"""
@@ -56,7 +65,7 @@ class sampler_MS:
         ----------
         method : string, optional
             Matrix splitting approach to choose within 
-            ['Gauss-Seidel','Richardson','Jacobi','SOR'].
+            ['Gauss-Seidel','Richardson','Jacobi','SOR','SSOR','Cheby-SSOR'].
             
         Returns
         -------
@@ -69,10 +78,16 @@ class sampler_MS:
         >>> import mcmc_sampling as mcmc
         >>> d = 10
         >>> mu = np.zeros(d)
+        >>> ini = np.zeros(d)
         >>> Q = np.eye(d)
-        >>> S = mcmc.sampler_MS(mu,Q,size=1)
+        >>> b = 1
+        >>> band = True
+        >>> S = mcmc.sampler_MS(mu,Q,ini=ini,b=b,band=True,seed=2022,size=1)
         >>> theta = S.exact_MS(method="Gauss-Seidel")
         """ 
+
+        # Set the seed
+        np.random.seed(self.seed)
         
         d = len(self.mu)
         theta = np.zeros((d,self.size))
@@ -187,9 +202,10 @@ class sampler_MS:
                 print('''The precision matrix Q is not strictly diagonally dominant. A default value has been set for the relaxation parameter omega.''')
             else:
                 Dinv = 1 / np.diag(self.Q)
-                J = np.eye(d) - self.Q * Dinv[:,None]
+                L = np.tril(self.Q)- np.diag(np.diag(self.Q))
+                J = np.diag(Dinv).dot(L + L.T)
                 rho = np.max(np.abs(np.linalg.eigvals(J)))
-                omega = 2 / (1 + np.sqrt(1 - rho**2))
+                omega = 2 / (1 + np.sqrt(2*(1 - rho)))
                 
             # Matrix splitting Q = M - N
             M = np.tril(self.Q) \
@@ -212,9 +228,67 @@ class sampler_MS:
                 z = np.random.normal(0,1,size=d) * np.sqrt(D)
                 Qtheta = NT(theta_bis) + z
                 theta[:,t+1] = solve_triangular(M.T,Qtheta,lower=False)
+                 
+
+        elif method == "Cheby-SSOR":
+
+            # Check if Q is strictly diagonally dominant
+            D = np.diag(np.abs(self.Q)) 
+            S = np.sum(np.abs(self.Q), axis=1) - D 
+            if np.all(D <= S):
+                omega = 1.5
+                print('''The precision matrix Q is not strictly diagonally dominant. A default value has been set for the relaxation parameter omega.''')
+            else:
+                Dinv = 1 / np.diag(self.Q)
+                L = np.tril(self.Q)- np.diag(np.diag(self.Q))
+                J = np.diag(Dinv).dot(L + L.T)
+                rho = np.max(np.abs(np.linalg.eigvals(J)))
+                omega = 2 / (1 + np.sqrt(2*(1 - rho)))
+
+            # Matrix splitting Q = M - N
+            M = np.tril(self.Q) + (1-omega)/omega * np.diag(self.Q) * np.eye(d)
+            D = (2-omega)/omega * np.diag(self.Q)
+            Dinv = 1 / np.diag(self.Q)
+
+            # Find extremal eigenvalues of inv(M_ssor) * Q
+            M_ssor = (omega/(2-omega)) * M.dot(np.diag(Dinv).dot(M.T))
+            A = np.linalg.inv(M_ssor).dot(self.Q)
+            l_max = np.max(np.abs(np.linalg.eigvals(A)))
+            l_min = np.min(np.abs(np.linalg.eigvals(A)))
+
+            # Initialization
+            delta = ((l_max - l_min)/4)**2
+            tau = 2/(l_max+l_min)
+            alpha = 1
+            beta = 2*tau
+            e = 2/alpha - 1
+            c = (2/tau-1)*e
+            kappa = tau
+
+            for t in range(self.size-1):
                 
-        
-        return np.reshape(self.mu,(d,1)) + theta  
+                z = np.random.normal(0,1,size=d)
+                b = np.sqrt(e) * np.diag(np.sqrt(D)).dot(z)
+                y = solve_triangular(M,b-self.Q.dot(theta[:,t]),lower=True)
+                x = theta[:,t] + y
+                
+                z = np.random.normal(0,1,size=d)
+                b = np.sqrt(c) * np.diag(np.sqrt(D)).dot(z)
+                y = solve_triangular(M.T,b-self.Q.dot(x),lower=False)
+                w = x - theta[:,t] + y
+                
+                if t == 0:
+                    theta[:,t+1] = alpha * (theta[:,t] + tau * w)
+                else:
+                    theta[:,t+1] = alpha * (theta[:,t] - theta[:,t-1] + tau * w) + theta[:,t-1]
+                
+                beta = 1/(1/tau - beta * delta)
+                alpha = beta / tau
+                e = 2 * kappa * (1-alpha) / beta + 1
+                c = (2/tau-1) + (e-1)*(1/tau+1/kappa-1)
+                kappa = beta + (1-alpha)*kappa
+
+        return np.reshape(self.mu,(d,1)) + theta
     
             
     def approx_MS(self,method="Clone-MCMC",omega=1):
@@ -225,7 +299,7 @@ class sampler_MS:
         ----------
         method : string, optional
             Matrix splitting approach to choose within 
-            ['Gauss-Seidel','Richardson','Jacobi','SOR'].
+            ['Clone-MCMC','Hogwild'].
         omega : float, optional
             Tuning parameter appearing in some approximate matrix splitting 
             Gibbs samplers.
@@ -241,10 +315,16 @@ class sampler_MS:
         >>> import mcmc_sampling as mcmc
         >>> d = 10
         >>> mu = np.zeros(d)
+        >>> ini = np.zeros(d)
         >>> Q = np.eye(d)
-        >>> S = mcmc.sampler_MS(mu,Q,size=1)
+        >>> b = 1
+        >>> band = True
+        >>> S = mcmc.sampler_MS(mu,Q,ini=ini,b=b,band=True,seed=2022,size=1)
         >>> theta = S.approx_MS(method="Gauss-Seidel",omega=1)
         """ 
+
+        # Set the seed
+        np.random.seed(self.seed)
         
         d = len(self.mu)
         theta = np.zeros((d,self.size))
@@ -311,12 +391,14 @@ class sampler_DA:
     algorithm based on a data augmentation scheme.
     """
 
-    def __init__(self,mu,size=1):
+    def __init__(self,mu,seed=2022,size=1):
         r"""
     
         Parameters
         ----------
         mu : 1-D array_like, of length d
+        seed : int, optional
+               Random seed to reproduce experimental results.
         size : int, optional
             Given a size of for instance T, T independent and identically 
             distributed (i.i.d.) samples are returned.       
@@ -324,6 +406,7 @@ class sampler_DA:
             
         self.mu = mu
         self.size = size
+        self.seed = seed
     
     def exact_DA_circu_diag_band(self,Lamb1,g,M,N,Q2,b2,method="GEDA"):
         r"""
@@ -368,10 +451,13 @@ class sampler_DA:
         >>> N = d
         >>> Q2 = np.diag(np.random.normal(2,0.1,d))
         >>> b2 = 0
-        >>> S = mcmc.sampler_DA(mu,size=1)
+        >>> S = mcmc.sampler_DA(mu,seed=2022,size=1)
         >>> theta = S.exact_DA_circu_diag_band(Lamb1,g,M,N,
                                                Q2,b2,method="EDA")
         """ 
+
+        # Set random seed
+        np.random.seed(self.seed)
         
         # Pre-computing
         if np.size(g,1) == 1:
@@ -403,14 +489,14 @@ class sampler_DA:
                 lam_u = 1/omega
                 u1 = sampler_squareRootApprox(mu_u1,A,lam_l=0,
                                              lam_u=lam_u,tol=1e-2,
-                                             K=d,mode='covariance')
+                                             K=d,mode='covariance',seed=self.seed)
                 u1 = np.reshape(u1,(d,))
                 
                 # Sample the variable of interest theta
                 Q_theta = np.eye(d) / omega + Q2
-                z = sampler_band(np.zeros(d),Q_theta,b2,mode="precision",
+                z = sampler_band(np.zeros(d),Q_theta,b2,mode="precision",seed=self.seed,
                                         size=1)[0]
-                C = sampler_band(np.zeros(d),Q2,b2,mode="precision",
+                C = sampler_band(np.zeros(d),Q2,b2,mode="precision",seed=self.seed,
                                         size=1)[1]
                 def Q2_fun(x):
                     CTx = np.zeros(M*N)
@@ -449,9 +535,9 @@ class sampler_DA:
                 
                 # Sample the variable of interest theta
                 Q_theta = np.eye(d) / omega + Q2
-                z = sampler_band(np.zeros(d),Q_theta,b2,mode="precision",
+                z = sampler_band(np.zeros(d),Q_theta,b2,mode="precision",seed=self.seed,
                                         size=1)[0]
-                C = sampler_band(np.zeros(d),Q2,b2,mode="precision",
+                C = sampler_band(np.zeros(d),Q2,b2,mode="precision",seed=self.seed,
                                         size=1)[1]
                 def Q2_fun(x):
                     CTx = np.zeros(M*N)
@@ -514,10 +600,13 @@ class sampler_DA:
         >>> N = d
         >>> Q2 = np.diag(np.random.normal(2,0.1,d))
         >>> b2 = 0
-        >>> S = mcmc.sampler_DA(mu,size=1)
+        >>> S = mcmc.sampler_DA(mu,seed=2022,size=1)
         >>> theta = S.exact_DA_circu_diag_band(Lamb1,g,M,N,
                                                Q2,b2,method="EDA")
         """ 
+
+        # Set random seed
+        np.random.seed(self.seed)
 
         def Q1(x):
             Fx = np.fft.fft(x,axis=0)

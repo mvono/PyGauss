@@ -164,11 +164,11 @@
 from multivariate Gaussian distributions.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
-<p><a class="reference external" href="https://dppy.readthedocs.io/en/latest/finite_dpps/exact_sampling.html">Documentation on ReadTheDocs</a></p>
+<p><a class="reference external" href="https://pygauss-gaussian-sampling.readthedocs.io/en/latest/mcmc_sampling/index.html">Documentation on ReadTheDocs</a></p>
 </div>
 <dl class="class">
 <dt id="pygauss.mcmc_sampling.sampler_MS">
-<em class="property">class </em><code class="sig-prename descclassname">pygauss.mcmc_sampling.</code><code class="sig-name descname">sampler_MS</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">Q</em>, <em class="sig-param">ini</em>, <em class="sig-param">b</em>, <em class="sig-param">band=True</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_MS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_MS" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pygauss.mcmc_sampling.</code><code class="sig-name descname">sampler_MS</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">Q</em>, <em class="sig-param">ini</em>, <em class="sig-param">b</em>, <em class="sig-param">band=True</em>, <em class="sig-param">seed=2022</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_MS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_MS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Algorithm dedicated to sample from a multivariate real-valued Gaussian
 distribution <span class="math notranslate nohighlight">\(\mathcal{N}(\boldsymbol{\mu},\mathbf{Q}^{-1})\)</span> where
 <span class="math notranslate nohighlight">\(\mathbf{Q}\)</span> is a symmetric and positive definite precision matrix.
@@ -176,14 +176,18 @@ We assume here that the matrix splitting scheme <span class="math notranslate no
 \mathbf{M} - \mathbf{N}\)</span> holds.</p>
 <dl class="method">
 <dt id="pygauss.mcmc_sampling.sampler_MS.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">Q</em>, <em class="sig-param">ini</em>, <em class="sig-param">b</em>, <em class="sig-param">band=True</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_MS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_MS.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">Q</em>, <em class="sig-param">ini</em>, <em class="sig-param">b</em>, <em class="sig-param">band=True</em>, <em class="sig-param">seed=2022</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_MS.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_MS.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>mu</strong> (<em>1-D array_like</em><em>, </em><em>of length d</em>) – </p></li>
-<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Given a size of for instance T, T independent and identically
-distributed (i.i.d.) samples are returned.</p></li>
 <li><p><strong>Q</strong> (<em>2-D array_like</em><em>, </em><em>of shape</em><em> (</em><em>d</em><em>,</em><em>d</em><em>)</em>) – Precision matrix.</p></li>
+<li><p><strong>ini</strong> (<em>1-D array_like</em><em>, </em><em>of length d. Initialization of the Markov chain.</em>) – </p></li>
+<li><p><strong>b</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Bandwidth of the precision matrix Q.</p></li>
+<li><p><strong>band</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Indicates if the precision matrix is banded with bandwidth b.</p></li>
+<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Random seed to reproduce experimental results.</p></li>
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Given a size of for instance T, T independent and identically
+distributed (i.i.d.) samples are returned.</p></li>
 </ul>
 </dd>
 </dl>
@@ -196,7 +200,7 @@ distributed (i.i.d.) samples are returned.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Matrix splitting approach to choose within
-[‘Gauss-Seidel’,’Richardson’,’Jacobi’,’SOR’].</p>
+[‘Gauss-Seidel’,’Richardson’,’Jacobi’,’SOR’,’SSOR’,’Cheby-SSOR’].</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>theta</strong> – The drawn samples, of shape (d,size), if that was provided. If not,
@@ -210,8 +214,11 @@ the shape is (d,1).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mcmc_sampling</span> <span class="k">as</span> <span class="nn">mcmc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ini</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_MS</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">band</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_MS</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">ini</span><span class="o">=</span><span class="n">ini</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span><span class="n">band</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">exact_MS</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;Gauss-Seidel&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -225,8 +232,8 @@ the shape is (d,1).</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Matrix splitting approach to choose within
-[‘Gauss-Seidel’,’Richardson’,’Jacobi’,’SOR’].</p></li>
-<li><p><strong>omega</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.8)"><em>float</em></a><em>, </em><em>optional</em>) – Tuning parameter appearing in some approximate matrix splitting
+[‘Clone-MCMC’,’Hogwild’].</p></li>
+<li><p><strong>omega</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>, </em><em>optional</em>) – Tuning parameter appearing in some approximate matrix splitting
 Gibbs samplers.</p></li>
 </ul>
 </dd>
@@ -242,8 +249,11 @@ the shape is (d,1).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mcmc_sampling</span> <span class="k">as</span> <span class="nn">mcmc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ini</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_MS</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">band</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_MS</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">Q</span><span class="p">,</span><span class="n">ini</span><span class="o">=</span><span class="n">ini</span><span class="p">,</span><span class="n">b</span><span class="o">=</span><span class="n">b</span><span class="p">,</span><span class="n">band</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">approx_MS</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;Gauss-Seidel&quot;</span><span class="p">,</span><span class="n">omega</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -253,7 +263,7 @@ the shape is (d,1).</p>
 
 <dl class="class">
 <dt id="pygauss.mcmc_sampling.sampler_DA">
-<em class="property">class </em><code class="sig-prename descclassname">pygauss.mcmc_sampling.</code><code class="sig-name descname">sampler_DA</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_DA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_DA" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pygauss.mcmc_sampling.</code><code class="sig-name descname">sampler_DA</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">seed=2022</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_DA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_DA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Algorithm dedicated to sample from a multivariate real-valued Gaussian
 distribution <span class="math notranslate nohighlight">\(\mathcal{N}(\boldsymbol{\mu},\mathbf{Q}^{-1})\)</span> where
 <span class="math notranslate nohighlight">\(\mathbf{Q}\)</span> is a symmetric and positive definite precision matrix.
@@ -264,12 +274,13 @@ corresponding multivariate Gaussian distribution is done with an MCMC
 algorithm based on a data augmentation scheme.</p>
 <dl class="method">
 <dt id="pygauss.mcmc_sampling.sampler_DA.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_DA.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_DA.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">mu</em>, <em class="sig-param">seed=2022</em>, <em class="sig-param">size=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pygauss/mcmc_sampling.html#sampler_DA.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pygauss.mcmc_sampling.sampler_DA.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>mu</strong> (<em>1-D array_like</em><em>, </em><em>of length d</em>) – </p></li>
-<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a><em>, </em><em>optional</em>) – Given a size of for instance T, T independent and identically
+<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Random seed to reproduce experimental results.</p></li>
+<li><p><strong>size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>optional</em>) – Given a size of for instance T, T independent and identically
 distributed (i.i.d.) samples are returned.</p></li>
 </ul>
 </dd>
@@ -291,10 +302,10 @@ a band matrix.</p>
 <li><p><strong>g</strong> (<em>2-D array_like</em><em>, </em><em>of shape</em><em> (</em><em>N</em><em>, </em><em>M</em><em>)</em>) – Vector built by stacking the first columns associated to the
 <span class="math notranslate nohighlight">\(M\)</span> blocks of size <span class="math notranslate nohighlight">\(N\)</span> of the matrix
 <span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span>.</p></li>
-<li><p><strong>M</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Number of different blocks in <span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span>.</p></li>
-<li><p><strong>N</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Dimension of each block in <span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span>.</p></li>
+<li><p><strong>M</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Number of different blocks in <span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span>.</p></li>
+<li><p><strong>N</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Dimension of each block in <span class="math notranslate nohighlight">\(\mathbf{G}_1\)</span>.</p></li>
 <li><p><strong>Q2</strong> (<em>2-D array_like</em><em>, </em><em>of shape</em><em> (</em><em>d</em><em>, </em><em>d</em><em>)</em>) – Precision matrix <span class="math notranslate nohighlight">\(\mathbf{Q}_2\)</span>.</p></li>
-<li><p><strong>b2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.8)"><em>int</em></a>) – Bandwidth of <span class="math notranslate nohighlight">\(\mathbf{Q}_2\)</span>.</p></li>
+<li><p><strong>b2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Bandwidth of <span class="math notranslate nohighlight">\(\mathbf{Q}_2\)</span>.</p></li>
 <li><p><strong>method</strong> (<em>string</em><em>, </em><em>optional</em>) – Data augmentation approach to choose within [‘EDA’,’GEDA’].</p></li>
 </ul>
 </dd>
@@ -315,7 +326,7 @@ the shape is (d,1).</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">d</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Q2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">d</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">b2</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_DA</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_DA</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">exact_DA_circu_diag_band</span><span class="p">(</span><span class="n">Lamb1</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">,</span>
 <span class="go">                                       Q2,b2,method=&quot;EDA&quot;)</span>
 </pre></div>
@@ -359,7 +370,7 @@ the shape is (d,1).</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">d</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Q2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.1</span><span class="p">,</span><span class="n">d</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">b2</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_DA</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">mcmc</span><span class="o">.</span><span class="n">sampler_DA</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">exact_DA_circu_diag_band</span><span class="p">(</span><span class="n">Lamb1</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">,</span>
 <span class="go">                                       Q2,b2,method=&quot;EDA&quot;)</span>
 </pre></div>

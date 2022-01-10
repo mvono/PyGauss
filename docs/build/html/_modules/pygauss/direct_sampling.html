@@ -157,7 +157,7 @@
 
 <span class="sd">.. seealso::</span>
 <span class="sd">    </span>
-<span class="sd">    `Documentation on ReadTheDocs &lt;https://dppy.readthedocs.io/en/latest/finite_dpps/exact_sampling.html&gt;`_</span>
+<span class="sd">    `Documentation on ReadTheDocs &lt;https://pygauss-gaussian-sampling.readthedocs.io/en/latest/direct_sampling/index.html&gt;`_</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -170,7 +170,7 @@
 <span class="c1">#####################</span>
 
 <span class="c1"># Multivariate Gaussian sampling with band precision or covariance matrix</span>
-<div class="viewcode-block" id="sampler_band"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_band">[docs]</a><span class="k">def</span> <span class="nf">sampler_band</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="sampler_band"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_band">[docs]</a><span class="k">def</span> <span class="nf">sampler_band</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Algorithm dedicated to sample from a multivariate real-valued Gaussian </span>
 <span class="sd">    distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or </span>
@@ -189,6 +189,8 @@
 <span class="sd">    mode : string, optional</span>
 <span class="sd">        Indicates if A refers to the precision or covariance matrix of the</span>
 <span class="sd">        Gaussian distribution.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">               Random seed to reproduce experimental results.</span>
 <span class="sd">    size : int, optional</span>
 <span class="sd">        Given a size of for instance T, T independent and identically </span>
 <span class="sd">        distributed (i.i.d.) samples are returned.</span>
@@ -212,8 +214,11 @@
 <span class="sd">    &gt;&gt;&gt; b = 0</span>
 <span class="sd">    &gt;&gt;&gt; mode = &quot;covariance&quot;</span>
 <span class="sd">    &gt;&gt;&gt; size = 1</span>
-<span class="sd">    &gt;&gt;&gt; theta = sampler_band(mu,A,b,mode=mode,size=size)</span>
-<span class="sd">    &quot;&quot;&quot;</span>          
+<span class="sd">    &gt;&gt;&gt; theta = sampler_band(mu,A,b,mode=mode,seed=2022,size=size)</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+
+    <span class="c1"># Set random seed</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>      
 
     <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;precision&quot;</span><span class="p">:</span>
         <span class="c1"># Check if the matrix is definite positive</span>
@@ -277,7 +282,7 @@
 
 <span class="c1"># Multivariate Gaussian sampling with block circulant precision or </span>
 <span class="c1"># covariance matrix</span>
-<div class="viewcode-block" id="sampler_circulant"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_circulant">[docs]</a><span class="k">def</span> <span class="nf">sampler_circulant</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="sampler_circulant"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_circulant">[docs]</a><span class="k">def</span> <span class="nf">sampler_circulant</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Algorithm dedicated to sample from a multivariate real-valued Gaussian </span>
 <span class="sd">    distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or </span>
@@ -298,6 +303,8 @@
 <span class="sd">    mode : string, optional</span>
 <span class="sd">        Indicates if A refers to the precision or covariance matrix of the</span>
 <span class="sd">        Gaussian distribution.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">           Random seed to reproduce experimental results.</span>
 <span class="sd">    size : int, optional</span>
 <span class="sd">        Given a size of for instance T, T independent and identically </span>
 <span class="sd">        distributed (i.i.d.) samples are returned.</span>
@@ -322,8 +329,11 @@
 <span class="sd">    &gt;&gt;&gt; N = 2</span>
 <span class="sd">    &gt;&gt;&gt; mode = &quot;covariance&quot;</span>
 <span class="sd">    &gt;&gt;&gt; size = 1</span>
-<span class="sd">    &gt;&gt;&gt; theta = sampler_circulant(mu,a,M,N,mode=mode,size=size)</span>
+<span class="sd">    &gt;&gt;&gt; theta = sampler_circulant(mu,a,M,N,mode=mode,seed=2022,size=size)</span>
 <span class="sd">    &quot;&quot;&quot;</span> 
+
+    <span class="c1"># Set random seed</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
     
     <span class="n">M</span> <span class="o">=</span> <span class="n">M</span>
     <span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
@@ -363,7 +373,7 @@
 <span class="c1">#####################    </span>
         
 <span class="c1"># Multivariate Gaussian sampling with factorization </span>
-<div class="viewcode-block" id="sampler_factorization"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_factorization">[docs]</a><span class="k">def</span> <span class="nf">sampler_factorization</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;Cholesky&quot;</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="sampler_factorization"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_factorization">[docs]</a><span class="k">def</span> <span class="nf">sampler_factorization</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;Cholesky&quot;</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Algorithm dedicated to sample from a multivariate real-valued Gaussian </span>
 <span class="sd">    distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or </span>
@@ -382,6 +392,8 @@
 <span class="sd">        Gaussian distribution.</span>
 <span class="sd">    method : string, optional</span>
 <span class="sd">        Factorization method. Choose either &#39;Cholesky&#39; or &#39;square-root&#39;.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">           Random seed to reproduce experimental results.    </span>
 <span class="sd">    size : int, optional</span>
 <span class="sd">        Given a size of for instance T, T independent and identically </span>
 <span class="sd">        distributed (i.i.d.) samples are returned.</span>
@@ -407,8 +419,11 @@
 <span class="sd">    &gt;&gt;&gt; mode = &quot;covariance&quot;</span>
 <span class="sd">    &gt;&gt;&gt; method = &quot;Cholesky&quot;</span>
 <span class="sd">    &gt;&gt;&gt; size = 1</span>
-<span class="sd">    &gt;&gt;&gt; theta = sampler_factorization(mu,A,mode=mode,method=method,size=size)</span>
+<span class="sd">    &gt;&gt;&gt; theta = sampler_factorization(mu,A,mode=mode,method=method,seed=2022,size=size)</span>
 <span class="sd">    &quot;&quot;&quot;</span> 
+
+    <span class="c1"># Set random seed</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
     
     <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span>
         
@@ -464,7 +479,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_list</span><span class="p">))</span></div>
         
 <span class="c1"># Multivariate Gaussian sampling with square-root approximation </span>
-<div class="viewcode-block" id="sampler_squareRootApprox"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_squareRootApprox">[docs]</a><span class="k">def</span> <span class="nf">sampler_squareRootApprox</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">lam_l</span><span class="p">,</span><span class="n">lam_u</span><span class="p">,</span><span class="n">tol</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span>
+<div class="viewcode-block" id="sampler_squareRootApprox"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_squareRootApprox">[docs]</a><span class="k">def</span> <span class="nf">sampler_squareRootApprox</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">lam_l</span><span class="p">,</span><span class="n">lam_u</span><span class="p">,</span><span class="n">tol</span><span class="p">,</span><span class="n">K</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span>
                              <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Algorithm dedicated to sample from a multivariate real-valued Gaussian </span>
@@ -493,6 +508,8 @@
 <span class="sd">    mode : string, optional</span>
 <span class="sd">        Indicates if A refers to the precision or covariance matrix of the</span>
 <span class="sd">        Gaussian distribution.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">           Random seed to reproduce experimental results.</span>
 <span class="sd">    size : int, optional</span>
 <span class="sd">        Given a size of for instance T, T independent and identically </span>
 <span class="sd">        distributed (i.i.d.) samples are returned.</span>
@@ -523,8 +540,11 @@
 <span class="sd">    &gt;&gt;&gt; mode = &quot;covariance&quot;</span>
 <span class="sd">    &gt;&gt;&gt; size = 1</span>
 <span class="sd">    &gt;&gt;&gt; theta = sampler_squareRootApprox(mu,A,lam_l=lam_l,lam_u=lam_u,tol=tol,</span>
-<span class="sd">    mode=mode,size=size)</span>
+<span class="sd">    mode=mode,seed=2022,size=size)</span>
 <span class="sd">    &quot;&quot;&quot;</span> 
+
+    <span class="c1"># Set random seed</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
         
     <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;precision&quot;</span><span class="p">:</span>
         <span class="k">def</span> <span class="nf">fun</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -606,7 +626,7 @@
         
         
 <span class="c1"># Multivariate Gaussian sampling with conjugate gradients </span>
-<div class="viewcode-block" id="sampler_CG"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_CG">[docs]</a><span class="k">def</span> <span class="nf">sampler_CG</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">K</span><span class="p">,</span><span class="n">init</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="sampler_CG"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_CG">[docs]</a><span class="k">def</span> <span class="nf">sampler_CG</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">K</span><span class="p">,</span><span class="n">init</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Algorithm dedicated to sample from a multivariate real-valued Gaussian </span>
 <span class="sd">    distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or </span>
@@ -629,6 +649,8 @@
 <span class="sd">    mode : string, optional</span>
 <span class="sd">        Indicates if A refers to the precision or covariance matrix of the</span>
 <span class="sd">        Gaussian distribution.</span>
+<span class="sd">    seed : int, optional</span>
+<span class="sd">           Random seed to reproduce experimental results.</span>
 <span class="sd">    size : int, optional</span>
 <span class="sd">        Given a size of for instance T, T independent and identically </span>
 <span class="sd">        distributed (i.i.d.) samples are returned.</span>
@@ -656,6 +678,9 @@
 <span class="sd">    &gt;&gt;&gt; init = mu</span>
 <span class="sd">    &gt;&gt;&gt; theta = sampler_CG(mu,A,K,init)</span>
 <span class="sd">    &quot;&quot;&quot;</span> 
+
+    <span class="c1"># Set random seed</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
     
     <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span>
     <span class="n">init</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">init</span><span class="p">,(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
@@ -761,7 +786,7 @@
 <span class="sd">    perturbation-optimization sampler.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="sampler_PO.__init__"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_PO.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">mu1</span><span class="p">,</span><span class="n">mu2</span><span class="p">,</span><span class="n">K</span><span class="p">,</span><span class="n">init</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="sampler_PO.__init__"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_PO.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">mu1</span><span class="p">,</span><span class="n">mu2</span><span class="p">,</span><span class="n">K</span><span class="p">,</span><span class="n">init</span><span class="p">,</span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
         <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    </span>
 <span class="sd">        Parameters</span>
@@ -775,6 +800,8 @@
 <span class="sd">            Vector used to initialize the CG algorithm.</span>
 <span class="sd">        tol : float, optional</span>
 <span class="sd">            Tolerance threshold used to stop the conjugate gradient algorithm.</span>
+<span class="sd">        seed : int, optional</span>
+<span class="sd">               Random seed to reproduce experimental results.</span>
 <span class="sd">        size : int, optional</span>
 <span class="sd">            Given a size of for instance T, T independent and identically </span>
 <span class="sd">            distributed (i.i.d.) samples are returned.</span>
@@ -785,6 +812,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">K</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">init</span> <span class="o">=</span> <span class="n">init</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">tol</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="n">seed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span></div>
     
 <div class="viewcode-block" id="sampler_PO.circu_diag_band"><a class="viewcode-back" href="../../direct_sampling/api.html#pygauss.direct_sampling.sampler_PO.circu_diag_band">[docs]</a>    <span class="k">def</span> <span class="nf">circu_diag_band</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">Lamb1</span><span class="p">,</span><span class="n">g</span><span class="p">,</span><span class="n">M</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="n">Q2</span><span class="p">,</span><span class="n">b2</span><span class="p">):</span>
@@ -834,6 +862,10 @@
 <span class="sd">        &gt;&gt;&gt; S = sampler_PO(mu1,mu2,K,init,size=10000)</span>
 <span class="sd">        &gt;&gt;&gt; theta = S.circu_diag_band(Lamb1,g,M,N,Q21,b2)</span>
 <span class="sd">        &quot;&quot;&quot;</span> 
+
+        <span class="c1"># Set random seed</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+
         <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Lamb1</span><span class="p">)</span>
         <span class="n">eta1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu1</span><span class="p">,(</span><span class="n">d</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> \
                <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">d</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">))</span> \

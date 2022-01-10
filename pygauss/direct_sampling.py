@@ -18,7 +18,7 @@ from utils import CG, Chebyshev, col_vector_norms
 #####################
 
 # Multivariate Gaussian sampling with band precision or covariance matrix
-def sampler_band(mu,A,b,mode="precision",size=1):
+def sampler_band(mu,A,b,mode="precision",seed=2022,size=1):
     r"""
     Algorithm dedicated to sample from a multivariate real-valued Gaussian 
     distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or 
@@ -37,6 +37,8 @@ def sampler_band(mu,A,b,mode="precision",size=1):
     mode : string, optional
         Indicates if A refers to the precision or covariance matrix of the
         Gaussian distribution.
+    seed : int, optional
+               Random seed to reproduce experimental results.
     size : int, optional
         Given a size of for instance T, T independent and identically 
         distributed (i.i.d.) samples are returned.
@@ -60,8 +62,11 @@ def sampler_band(mu,A,b,mode="precision",size=1):
     >>> b = 0
     >>> mode = "covariance"
     >>> size = 1
-    >>> theta = sampler_band(mu,A,b,mode=mode,size=size)
-    """          
+    >>> theta = sampler_band(mu,A,b,mode=mode,seed=2022,size=size)
+    """    
+
+    # Set random seed
+    np.random.seed(seed)      
 
     if mode == "precision":
         # Check if the matrix is definite positive
@@ -125,7 +130,7 @@ def sampler_band(mu,A,b,mode="precision",size=1):
 
 # Multivariate Gaussian sampling with block circulant precision or 
 # covariance matrix
-def sampler_circulant(mu,a,M,N,mode="precision",size=1):
+def sampler_circulant(mu,a,M,N,mode="precision",seed=2022,size=1):
     r"""
     Algorithm dedicated to sample from a multivariate real-valued Gaussian 
     distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or 
@@ -146,6 +151,8 @@ def sampler_circulant(mu,a,M,N,mode="precision",size=1):
     mode : string, optional
         Indicates if A refers to the precision or covariance matrix of the
         Gaussian distribution.
+    seed : int, optional
+           Random seed to reproduce experimental results.
     size : int, optional
         Given a size of for instance T, T independent and identically 
         distributed (i.i.d.) samples are returned.
@@ -170,8 +177,11 @@ def sampler_circulant(mu,a,M,N,mode="precision",size=1):
     >>> N = 2
     >>> mode = "covariance"
     >>> size = 1
-    >>> theta = sampler_circulant(mu,a,M,N,mode=mode,size=size)
+    >>> theta = sampler_circulant(mu,a,M,N,mode=mode,seed=2022,size=size)
     """ 
+
+    # Set random seed
+    np.random.seed(seed)
     
     M = M
     N = N
@@ -211,7 +221,7 @@ def sampler_circulant(mu,a,M,N,mode="precision",size=1):
 #####################    
         
 # Multivariate Gaussian sampling with factorization 
-def sampler_factorization(mu,A,mode="precision",method="Cholesky",size=1):
+def sampler_factorization(mu,A,mode="precision",method="Cholesky",seed=2022,size=1):
     r"""
     Algorithm dedicated to sample from a multivariate real-valued Gaussian 
     distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or 
@@ -230,6 +240,8 @@ def sampler_factorization(mu,A,mode="precision",method="Cholesky",size=1):
         Gaussian distribution.
     method : string, optional
         Factorization method. Choose either 'Cholesky' or 'square-root'.
+    seed : int, optional
+           Random seed to reproduce experimental results.    
     size : int, optional
         Given a size of for instance T, T independent and identically 
         distributed (i.i.d.) samples are returned.
@@ -255,8 +267,11 @@ def sampler_factorization(mu,A,mode="precision",method="Cholesky",size=1):
     >>> mode = "covariance"
     >>> method = "Cholesky"
     >>> size = 1
-    >>> theta = sampler_factorization(mu,A,mode=mode,method=method,size=size)
+    >>> theta = sampler_factorization(mu,A,mode=mode,method=method,seed=2022,size=size)
     """ 
+
+    # Set random seed
+    np.random.seed(seed)
     
     d = len(mu)
         
@@ -312,7 +327,7 @@ def sampler_factorization(mu,A,mode="precision",method="Cholesky",size=1):
         raise ValueError('\n'.join(str_list))
         
 # Multivariate Gaussian sampling with square-root approximation 
-def sampler_squareRootApprox(mu,A,lam_l,lam_u,tol,K=100,mode="precision",
+def sampler_squareRootApprox(mu,A,lam_l,lam_u,tol,K=100,mode="precision",seed=2022,
                              size=1,info=False):
     r"""
     Algorithm dedicated to sample from a multivariate real-valued Gaussian 
@@ -341,6 +356,8 @@ def sampler_squareRootApprox(mu,A,lam_l,lam_u,tol,K=100,mode="precision",
     mode : string, optional
         Indicates if A refers to the precision or covariance matrix of the
         Gaussian distribution.
+    seed : int, optional
+           Random seed to reproduce experimental results.
     size : int, optional
         Given a size of for instance T, T independent and identically 
         distributed (i.i.d.) samples are returned.
@@ -371,8 +388,11 @@ def sampler_squareRootApprox(mu,A,lam_l,lam_u,tol,K=100,mode="precision",
     >>> mode = "covariance"
     >>> size = 1
     >>> theta = sampler_squareRootApprox(mu,A,lam_l=lam_l,lam_u=lam_u,tol=tol,
-    mode=mode,size=size)
+    mode=mode,seed=2022,size=size)
     """ 
+
+    # Set random seed
+    np.random.seed(seed)
         
     if mode == "precision":
         def fun(x):
@@ -454,7 +474,7 @@ def sampler_squareRootApprox(mu,A,lam_l,lam_u,tol,K=100,mode="precision",
         
         
 # Multivariate Gaussian sampling with conjugate gradients 
-def sampler_CG(mu,A,K,init,tol=1e-4,mode="precision",size=1,info=False):
+def sampler_CG(mu,A,K,init,tol=1e-4,mode="precision",seed=2022,size=1,info=False):
     r"""
     Algorithm dedicated to sample from a multivariate real-valued Gaussian 
     distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or 
@@ -477,6 +497,8 @@ def sampler_CG(mu,A,K,init,tol=1e-4,mode="precision",size=1,info=False):
     mode : string, optional
         Indicates if A refers to the precision or covariance matrix of the
         Gaussian distribution.
+    seed : int, optional
+           Random seed to reproduce experimental results.
     size : int, optional
         Given a size of for instance T, T independent and identically 
         distributed (i.i.d.) samples are returned.
@@ -504,6 +526,9 @@ def sampler_CG(mu,A,K,init,tol=1e-4,mode="precision",size=1,info=False):
     >>> init = mu
     >>> theta = sampler_CG(mu,A,K,init)
     """ 
+
+    # Set random seed
+    np.random.seed(seed)
     
     d = len(mu)
     init = np.reshape(init,(d,1))
@@ -609,7 +634,7 @@ class sampler_PO:
     perturbation-optimization sampler.
     """
 
-    def __init__(self,mu1,mu2,K,init,tol=1e-4,size=1):
+    def __init__(self,mu1,mu2,K,init,tol=1e-4,seed=2022,size=1):
         r"""
     
         Parameters
@@ -623,6 +648,8 @@ class sampler_PO:
             Vector used to initialize the CG algorithm.
         tol : float, optional
             Tolerance threshold used to stop the conjugate gradient algorithm.
+        seed : int, optional
+               Random seed to reproduce experimental results.
         size : int, optional
             Given a size of for instance T, T independent and identically 
             distributed (i.i.d.) samples are returned.
@@ -633,6 +660,7 @@ class sampler_PO:
         self.K = K
         self.init = init
         self.tol = tol
+        self.seed = seed
         self.size = size
     
     def circu_diag_band(self,Lamb1,g,M,N,Q2,b2):
@@ -682,6 +710,10 @@ class sampler_PO:
         >>> S = sampler_PO(mu1,mu2,K,init,size=10000)
         >>> theta = S.circu_diag_band(Lamb1,g,M,N,Q21,b2)
         """ 
+
+        # Set random seed
+        np.random.seed(self.seed)
+
         d = len(Lamb1)
         eta1 = np.reshape(self.mu1,(d,1)) \
                + np.random.normal(0,1,size=(d,self.size)) \
