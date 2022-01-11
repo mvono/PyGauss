@@ -18,7 +18,7 @@ from utils import CG, Chebyshev, col_vector_norms
 #####################
 
 # Multivariate Gaussian sampling with band precision or covariance matrix
-def sampler_band(mu,A,b,mode="precision",seed=2022,size=1):
+def sampler_band(mu,A,b,mode="precision",seed=None,size=1):
     r"""
     Algorithm dedicated to sample from a multivariate real-valued Gaussian 
     distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or 
@@ -130,7 +130,7 @@ def sampler_band(mu,A,b,mode="precision",seed=2022,size=1):
 
 # Multivariate Gaussian sampling with block circulant precision or 
 # covariance matrix
-def sampler_circulant(mu,a,M,N,mode="precision",seed=2022,size=1):
+def sampler_circulant(mu,a,M,N,mode="precision",seed=None,size=1):
     r"""
     Algorithm dedicated to sample from a multivariate real-valued Gaussian 
     distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or 
@@ -221,7 +221,7 @@ def sampler_circulant(mu,a,M,N,mode="precision",seed=2022,size=1):
 #####################    
         
 # Multivariate Gaussian sampling with factorization 
-def sampler_factorization(mu,A,mode="precision",method="Cholesky",seed=2022,size=1):
+def sampler_factorization(mu,A,mode="precision",method="Cholesky",seed=None,size=1):
     r"""
     Algorithm dedicated to sample from a multivariate real-valued Gaussian 
     distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or 
@@ -327,7 +327,7 @@ def sampler_factorization(mu,A,mode="precision",method="Cholesky",seed=2022,size
         raise ValueError('\n'.join(str_list))
         
 # Multivariate Gaussian sampling with square-root approximation 
-def sampler_squareRootApprox(mu,A,lam_l,lam_u,tol,K=100,mode="precision",seed=2022,
+def sampler_squareRootApprox(mu,A,lam_l,lam_u,tol,K=100,mode="precision",seed=None,
                              size=1,info=False):
     r"""
     Algorithm dedicated to sample from a multivariate real-valued Gaussian 
@@ -474,7 +474,7 @@ def sampler_squareRootApprox(mu,A,lam_l,lam_u,tol,K=100,mode="precision",seed=20
         
         
 # Multivariate Gaussian sampling with conjugate gradients 
-def sampler_CG(mu,A,K,init,tol=1e-4,mode="precision",seed=2022,size=1,info=False):
+def sampler_CG(mu,A,K,init,tol=1e-4,mode="precision",seed=None,size=1,info=False):
     r"""
     Algorithm dedicated to sample from a multivariate real-valued Gaussian 
     distribution :math:`\mathcal{N}(\boldsymbol{\mu},\mathbf{A})` or 
@@ -634,7 +634,7 @@ class sampler_PO:
     perturbation-optimization sampler.
     """
 
-    def __init__(self,mu1,mu2,K,init,tol=1e-4,seed=2022,size=1):
+    def __init__(self,mu1,mu2,K,init,tol=1e-4,seed=None,size=1):
         r"""
     
         Parameters
