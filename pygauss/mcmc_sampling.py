@@ -27,7 +27,7 @@ class sampler_MS:
     \mathbf{M} - \mathbf{N}` holds.
     """
 
-    def __init__(self,mu,Q,ini,b,band=True,seed=2022,size=1):
+    def __init__(self,mu,Q,ini,b,band=True,seed=None,size=1):
         r"""
     
         Parameters
@@ -391,7 +391,7 @@ class sampler_DA:
     algorithm based on a data augmentation scheme.
     """
 
-    def __init__(self,mu,seed=2022,size=1):
+    def __init__(self,mu,seed=None,size=1):
         r"""
     
         Parameters
