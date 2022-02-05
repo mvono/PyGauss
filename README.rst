@@ -7,7 +7,7 @@ Introduction
 Efficient sampling from a high-dimensional Gaussian distribution is an old but high-stake issue. 
 In past years, multiple methods have been proposed from different communities to tackle this difficult sampling task ranging from iterative numerical linear algebra to Markov chain Monte Carlo (MCMC) approaches. 
 PyGauss is a `Python <https://www.python.org/>`__ library that puts together all exact and approximate sampling algorithms for high-dimensional Gaussian sampling.
-It stands for the companion package of the review paper entitled *High-dimensional Gaussian sampling: A review and a unifying approach based on a stochastic proximal point algorithm*, publicy available on `arXiv <https://arxiv.org/abs/2010.01510>`_ and accepted for publication in SIAM Review.
+It stands for the companion package of the review paper entitled *High-dimensional Gaussian sampling: A review and a unifying approach based on a stochastic proximal point algorithm*, accepted for publication in `SIAM Review <https://epubs.siam.org/doi/10.1137/20M1371026>`_ and publicly available on `arXiv <https://arxiv.org/abs/2010.01510>`_. The published version can be found `here <https://mvono.github.io/files/papers/Vono_SIREV_2022.pdf>`_.
 
 How to cite this work
 ---------------------
@@ -18,10 +18,13 @@ If you use the PyGauss toolbox, please consider citing it with this piece of Bib
 
     @article{Vono_SIREV_2022,
     author = {Maxime Vono and Nicolas Dobigeon and Pierre Chainais},
-    title = {High-dimensional Gaussian sampling: A review and a unifying approach based on a stochastic proximal point algorithm},
+    title = {High-Dimensional Gaussian Sampling: A Review and a Unifying Approach Based on a Stochastic Proximal Point Algorithm},
     year = {2022},
-    journal = {SIAM Review}
-    url = {https://arxiv.org/abs/2010.01510}
+    journal = {SIAM Review},
+    volume = 64,
+    number = 1,
+    pages = {3-56},
+    doi = {https://doi.org/10.1137/20M1371026}
     }
     
 
