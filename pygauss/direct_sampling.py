@@ -11,7 +11,7 @@ Gaussian distributions.
 import numpy as np
 from scipy.linalg import solve_triangular,sqrtm
 from math import sqrt
-from utils import CG, Chebyshev, col_vector_norms
+from pygauss.utils import CG, Chebyshev, col_vector_norms
 
 #####################
 # Special instances #
