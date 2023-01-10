@@ -8,15 +8,16 @@ from multivariate Gaussian distributions.
     `Documentation on ReadTheDocs <https://pygauss-gaussian-sampling.readthedocs.io/en/latest/mcmc_sampling/index.html>`_
 """
 
-from direct_sampling import sampler_squareRootApprox, sampler_band
-from utils import diagonal_form, triangular_inversion
 import numpy as np
 from scipy.linalg import solve_triangular, solve_banded
 
+from pygauss.direct_sampling import sampler_squareRootApprox, sampler_band
+from pygauss.utils import diagonal_form, triangular_inversion
+
 #####################
 # General instances #
-#####################    
-        
+#####################
+
 # MCMC sampling based on matrix splitting 
 class sampler_MS:
     r"""

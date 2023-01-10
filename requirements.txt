@@ -1,4 +1,4 @@
 numpy
 scipy>=1.1.0
 matplotlib
-sklearn
+scikit-learn
